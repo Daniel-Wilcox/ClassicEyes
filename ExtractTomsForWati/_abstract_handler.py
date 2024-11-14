@@ -15,50 +15,52 @@ class AbstractHandler(ABC):
     def __str__(self):
         return f"{self.__class__.__name__}".removesuffix("Handler")
     
+    #* ---------------------
+    #* Loading data methods
+    #* ---------------------
     # @abstractmethod
     # def load_dataframe(self):
     #     pass #! Change to normal method and not abstract
+    
+    def load_dataframe(self, filepath: str | None = None):
+        """Loads a DataFrame from the provided file path or the class attribute file_path."""
+        filepath = self._get_filepath(filepath)
+        self._validate_filepath(filepath)
+        self.df_raw = self._load_file(filepath)
+        return
 
-    def load_dataframe(self, filepath: str|None = None):
-        """Data is read into class variables from provided filepath"""
+    def _get_filepath(self, filepath: str | None):
+        """Resolve and return the file path, prioritizing the argument over the class attribute."""
+        this_filepath = filepath or getattr(self, "file_path", None)
+                                            
+        if not this_filepath:
+            raise AttributeError("No valid 'file_path' provided or set in the class.")
+        self.file_path = this_filepath
 
+        return this_filepath
 
-        # self.file_path = filepath or getattr(self, "file_path", None) or self._gen_filepath_from_filepath()
-        # saver = self.save_path
+    def _validate_filepath(self, filepath: str | None = None):
+        """Validate that the file exists and has a valid type."""
 
+        # Validate provided or class attribute depending on availability
+        this_filepath = filepath or getattr(self, "file_path", None)
+
+        if not os.path.exists(filepath) or not this_filepath:
+            raise FileNotFoundError(f"File not found at: {filepath}")
         
-        # if not hasattr(self, "save_path") and not self.save_path:
-        #     # No self.save_path
-        #     if not savepath:
-        #         self.save_path = savepath # Update self.save_path based on provided savepath
-        #     else:
-        #         self.save_path = self._gen_savepath_from_filepath() # Update self.save_path based on stored self.filepath
-        # save = self.save_path
+        file_ext = os.path.splitext(filepath)[-1] # File extension
+        if file_ext not in self.valid_file_types:
+            raise ValueError(f"Invalid file type '{file_ext}'. Expected one of {self.valid_file_types}.")
+
+    def _load_file(self, filepath: str) -> pd.DataFrame:
+        """Load the file into a DataFrame. This can be overridden by subclasses."""
+        return pd.read_excel(filepath, header = None)
 
 
 
-        if not hasattr(self, "file_path"):
-            raise AttributeError("Missing 'file_path' attribute. ")
-        filepath = self.file_path
-
-        # Ensure that file_path is set properly
-        if filepath and not os.path.exists(filepath):
-            raise FileNotFoundError(f"File not found: {filepath}")
-        self.file_path = filepath
-
-        # Check file types
-        file_name = filepath.split('/')[-1]
-        file_type = file_name.split('.')[-1]
-
-        if not(f".{file_type}" in self.valid_file_types):
-            raise ValueError(
-                f"{file_name} does not have valid file type: {self.valid_file_types}."
-            )
-
-        df = pd.read_excel(filepath, header = None)
-        self.df_raw = df
-
-
+    #* ---------------------
+    #* Process data methods
+    #* ---------------------
     @abstractmethod
     def process_data(self, filepath:str):
         """Data in class variables is transformed"""
@@ -82,3 +84,4 @@ class AbstractHandler(ABC):
 
 if __name__ == "__main__":
     print(AbstractHandler)
+

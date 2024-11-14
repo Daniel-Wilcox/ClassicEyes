@@ -59,31 +59,31 @@ class AppointmentHandler(AbstractHandler):
     remove_rows_containing_list: list[str] = field(default_factory = lambda: REMOVE_ROWS_WITH_KEYWORDS)
     default_headings_list: list[str] = field(default_factory = lambda: DEFAULT_CHOSEN_HEADINGS)
 
+    [
+    # def load_dataframe(self):
+    #     """Data is read into class variables from provided filepath"""
 
-    def load_dataframe(self):
-        """Data is read into class variables from provided filepath"""
+    #     if not hasattr(self, "file_path"):
+    #         raise AttributeError("Missing 'file_path' attribute. ")
+    #     filepath = self.file_path
 
-        if not hasattr(self, "file_path"):
-            raise AttributeError("Missing 'file_path' attribute. ")
-        filepath = self.file_path
+    #     # Ensure that file_path is set properly
+    #     if filepath and not os.path.exists(filepath):
+    #         raise FileNotFoundError(f"File not found: {filepath}")
+    #     self.file_path = filepath
 
-        # Ensure that file_path is set properly
-        if filepath and not os.path.exists(filepath):
-            raise FileNotFoundError(f"File not found: {filepath}")
-        self.file_path = filepath
+    #     # Check file types
+    #     file_name = filepath.split('/')[-1]
+    #     file_type = file_name.split('.')[-1]
 
-        # Check file types
-        file_name = filepath.split('/')[-1]
-        file_type = file_name.split('.')[-1]
+    #     if not(f".{file_type}" in self.valid_file_types):
+    #         raise ValueError(
+    #             f"{file_name} does not have valid file type: {self.valid_file_types}."
+    #         )
 
-        if not(f".{file_type}" in self.valid_file_types):
-            raise ValueError(
-                f"{file_name} does not have valid file type: {self.valid_file_types}."
-            )
-
-        df = pd.read_excel(filepath, header = None)
-        self.df_raw = df
-
+    #     df = pd.read_excel(filepath, header = None)
+    #     self.df_raw = df
+    ]
     
     def _assign_optometrist(self, x):
         if x in self.valid_optometrist_list:
