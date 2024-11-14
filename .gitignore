@@ -160,3 +160,11 @@ cython_debug/
 *.xls
 *.xlsx
 *.csv
+
+
+# old files
+old_apps_files/*
+settings.json
+AppointmentConverter/*
+notebooks/*
+.DS_Store
