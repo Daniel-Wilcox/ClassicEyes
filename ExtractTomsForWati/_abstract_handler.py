@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 import pandas as pd
 import os
 
@@ -10,6 +11,11 @@ class AbstractHandler(ABC):
     file_path: str|None = field(default = None)
     save_path: str|None = field(default = None)
     valid_file_types: list[str] = field(default_factory = list, init = False)
+
+    # Initialize pd.DataFrame attributes
+    df_raw: pd.DataFrame | None = field(default = None, init = False)
+    df_clean: pd.DataFrame | None = field(default = None, init = False)
+    df_output: pd.DataFrame | None = field(default = None, init = False)
 
 
     def __str__(self):
@@ -59,27 +65,105 @@ class AbstractHandler(ABC):
 
 
     #* ---------------------
-    #* Process data methods
+    #* Transform data methods
     #* ---------------------
-    @abstractmethod
-    def process_data(self, filepath:str):
+
+
+    # @abstractmethod
+    # def transform_data(self, filepath:str):
+    #     """Data in class variables is transformed"""
+    #     pass
+
+
+    def transform_data(self):
         """Data in class variables is transformed"""
+        self._clean_data()
+        self._add_features()
+        self._extract_features() 
+
+        return self.df_output
+    
+    @abstractmethod
+    def _clean_data(self, df: pd.DataFrame | None = None):
+        """Abstract method for cleaning data. Must be implemented by subclasses."""
         pass
+
+    @abstractmethod
+    def _add_features(self, df: pd.DataFrame | None = None):
+        """Abstract method for adding features. Must be implemented by subclasses."""
+        pass
+
+    @abstractmethod
+    def _extract_features(self, df: pd.DataFrame | None = None):
+        """Abstract method for extracting features. Must be implemented by subclasses."""
+        pass
+
+
+    #* ---------------------
+    #* Save data methods
+    #* ---------------------
+    # My code
+    def _get_savepath_from_filepath(self) -> str:
+
+        if not hasattr(self, "file_path"):
+            raise AttributeError("Missing 'file_path' attribute.")
+        
+        filepath = self.file_path
+
+        if not filepath:
+            raise ValueError("Value of 'file_path' cannot be None. Please provide filepath correctly.")
+
+        # Create datetime based filename for save file
+        current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        handler_name = str(self)
+        new_filename = f"{handler_name}_{current_datetime}.csv"
+    
+        new_filepath = filepath.split('/')[:-1]
+        new_filepath.append(new_filename)
+
+        savepath = "/".join(new_filepath)
+        self.save_path = savepath
+
+        return savepath
 
     @abstractmethod
     def save_data(self, savepath:str):
         """Save the cleaned data to a new file in save_folder."""
         pass
     
-    @abstractmethod
-    def load_and_process(self, filepath):
-        """The main method to run the complete handler workflow."""
-        pass
 
-    @abstractmethod
-    def load_process_save(self, filepath):
+
+    #* ---------------------
+    #* Apply Flows to data methods
+    #* ---------------------
+    
+     # @abstractmethod
+    # def load_and_process(self, filepath):
+    #     """The main method to run the complete handler workflow."""
+    #     pass
+
+    # @abstractmethod
+    # def load_process_save(self, filepath):
+    #     """The main method to run the complete handler workflow."""
+    #     pass
+
+    def load_and_process(self, filepath: str) -> pd.DataFrame:
+        """The main method to run the partial handler workflow i.e. Load and Process Data."""
+
+        self.load_dataframe(filepath)
+        self.transform_data()
+
+        return self.df_output
+
+
+    def load_process_save(self, filepath: str, savepath: str|None = None):
         """The main method to run the complete handler workflow."""
-        pass
+
+        self.load_dataframe(filepath)
+        self.transform_data()
+        self.save_data(savepath)
+
+   
 
 
 if __name__ == "__main__":

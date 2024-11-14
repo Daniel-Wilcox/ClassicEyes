@@ -49,10 +49,10 @@ class AppointmentHandler(AbstractHandler):
     # Initialize file attributes
     valid_file_types: list[str] = field(default_factory = lambda: DEFAULT_VALID_FILE_TYPES)
 
-    # Initialize pd.DataFrame attributes
-    df_raw: pd.DataFrame | None = field(default = None)
-    df_clean: pd.DataFrame | None = field(default = None)
-    df_output: pd.DataFrame | None = field(default = None)
+    # # Initialize pd.DataFrame attributes
+    # df_raw: pd.DataFrame | None = field(default = None)
+    # df_clean: pd.DataFrame | None = field(default = None)
+    # df_output: pd.DataFrame | None = field(default = None)
 
     # Initialize Default attributes
     valid_optometrist_list: list[str] = field(default_factory = lambda: VALID_OPTOMETRIST_LIST)
@@ -189,47 +189,48 @@ class AppointmentHandler(AbstractHandler):
 
         return df_output
 
+    [
+    # def transform_data(self):
+    #     """Data in class variables is transformed"""
 
-    def process_data(self):
-        """Data in class variables is transformed"""
+    #     # Clean Data
+    #     self._clean_data()
 
-        # Clean Data
-        self._clean_data()
+    #     # Apply new features
+    #     self._add_features()
 
-        # Apply new features
-        self._add_features()
+    #     # Extract Data
+    #     self._extract_features() 
 
-        # Extract Data
-        self._extract_features() 
+    #     df = self.df_output
 
-        df = self.df_output
+    #     return df
+    ]
 
-        return df
+    [ 
+    # def _gen_savepath_from_filepath(self) -> str:
 
+    #     if not hasattr(self, "file_path"):
+    #         raise AttributeError("Missing 'file_path' attribute.")
         
-    def _gen_savepath_from_filepath(self) -> str:
+    #     filepath = self.file_path
 
-        if not hasattr(self, "file_path"):
-            raise AttributeError("Missing 'file_path' attribute.")
-        
-        filepath = self.file_path
-
-        if not filepath:
-            raise ValueError("Value of 'file_path' cannot be None. Please provide filepath correctly.")
+    #     if not filepath:
+    #         raise ValueError("Value of 'file_path' cannot be None. Please provide filepath correctly.")
 
 
-        # Create datetime based filename for save file
-        current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        new_filename = f"Appointments_{current_datetime}.csv"
+    #     # Create datetime based filename for save file
+    #     current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    #     new_filename = f"Appointments_{current_datetime}.csv"
     
-        new_filepath = filepath.split('/')[:-1]
-        new_filepath.append(new_filename)
+    #     new_filepath = filepath.split('/')[:-1]
+    #     new_filepath.append(new_filename)
 
-        savepath = "/".join(new_filepath)
-        self.save_path = savepath
+    #     savepath = "/".join(new_filepath)
+    #     self.save_path = savepath
 
-        return savepath
-
+    #     return savepath
+    ]
 
     def save_data(self, savepath: str|None = None):
         """Save the cleaned data to a new file in save_folder."""
@@ -266,7 +267,7 @@ class AppointmentHandler(AbstractHandler):
         # Check output DataFrame availability 
         if not hasattr(self, "df_output"):
             raise AttributeError(
-                "Missing 'df_output' attribute. Cannot save data unless data is imported and processed with 'load_dataframe' and 'process_data' method."
+                "Missing 'df_output' attribute. Cannot save data unless data is imported and processed with 'load_dataframe' and 'transform_data' method."
             )
         
         # Get output pd.DataFrame and save
@@ -274,38 +275,38 @@ class AppointmentHandler(AbstractHandler):
         df.to_csv(saver, index=False)
 
 
-    def load_and_process(self, filepath: str) -> pd.DataFrame:
-        """The main method to run the partial handler workflow i.e. Load and Process Data."""
+    # def load_and_process(self, filepath: str) -> pd.DataFrame:
+    #     """The main method to run the partial handler workflow i.e. Load and Process Data."""
 
-        # Assign input variables to appropriate class attributes
-        self.file_path = filepath 
+    #     # Assign input variables to appropriate class attributes
+    #     self.file_path = filepath 
 
-        self.load_dataframe()
+    #     self.load_dataframe()
 
-        self.process_data()
+    #     self.transform_data()
 
-        df = self.df_output
+    #     df = self.df_output
 
-        return df
-
-
-    def load_process_save(self, filepath: str, savepath: str|None = None):
-        """The main method to run the complete handler workflow."""
-
-        # Assign input variables to appropriate class attributes
-        self.file_path = filepath 
-
-        # If supplied savepath isn't available, save based on datetime name
-        if not savepath:
-            savepath = self._gen_savepath_from_filepath()
-        self.save_path = savepath 
-
-        self.load_dataframe()
+    #     return df
 
 
-        self.process_data()
+    # def load_process_save(self, filepath: str, savepath: str|None = None):
+    #     """The main method to run the complete handler workflow."""
 
-        self.save_data()
+    #     # Assign input variables to appropriate class attributes
+    #     self.file_path = filepath 
+
+    #     # If supplied savepath isn't available, save based on datetime name
+    #     if not savepath:
+    #         savepath = self._gen_savepath_from_filepath()
+    #     self.save_path = savepath 
+
+    #     self.load_dataframe()
+
+
+    #     self.transform_data()
+
+    #     self.save_data()
 
 
 if __name__ == "__main__":
