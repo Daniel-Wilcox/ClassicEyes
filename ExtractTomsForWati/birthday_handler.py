@@ -17,7 +17,8 @@ DEFAULT_CHOSEN_HEADINGS = [
     "Age",
     "Contact",
     "CountryCode",
-    "CellCountry"
+    "CellCountry", 
+    "Practice"
 ]
 
 DEFAULT_VALID_FILE_TYPES= [
@@ -145,6 +146,7 @@ class BirthdayHandler(AbstractHandler):
         only_users_df["Name"] = only_users_df.Name.str.title()
         only_users_df
 
+
         # Assign class attribute with resulting DataFrame
         self.df_clean = only_users_df
 
@@ -161,6 +163,10 @@ class BirthdayHandler(AbstractHandler):
         # Add country code column
         #! Change phone numbers to include country code
         #TODO Add new features here
+
+        # Add practice information:
+        practice_string = f"Classic Eyes {self.selected_practice}"
+        df["Practice"] = practice_string
 
         self.df_clean = df
         return df
