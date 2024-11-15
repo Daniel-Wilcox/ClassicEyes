@@ -163,6 +163,7 @@ cython_debug/
 
 
 # old files
+Data/*
 old_apps_files/*
 settings.json
 AppointmentConverter/*
