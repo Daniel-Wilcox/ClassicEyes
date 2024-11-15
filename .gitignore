@@ -163,9 +163,10 @@ cython_debug/
 
 
 # old files
-Data/*
-old_apps_files/*
+Data/
+old_apps_files/
 settings.json
-AppointmentConverter/*
-notebooks/*
+AppointmentConverter/
+notebooks/
 .DS_Store
+*.zip
