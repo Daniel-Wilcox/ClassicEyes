@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import os
 
-@dataclass
+@dataclass(kw_only=True)
 class AbstractHandler(ABC):
 
     # Initialize file attributes
@@ -16,6 +16,9 @@ class AbstractHandler(ABC):
     df_raw: pd.DataFrame | None = field(default = None)
     df_clean: pd.DataFrame | None = field(default = None)
     df_output: pd.DataFrame | None = field(default = None)
+
+    # Initialize other attributes
+    selected_practice: str | None = field(default = None)
 
 
     def __str__(self):
@@ -57,6 +60,17 @@ class AbstractHandler(ABC):
     def _load_file(self, filepath: str) -> pd.DataFrame:
         """Load the file into a DataFrame. This can be overridden by subclasses."""
         return pd.read_excel(filepath, header = None)
+    
+    def _validate_dataframe(self, df_attr: str = "df_raw", df: pd.DataFrame | None = None):
+
+        # Set temporary DataFrame on provided DataFrame or DataFrame stored in the class attribute
+        df_temp =  df if df is not None else getattr(self, df_attr, None)
+
+        if df_temp is None:
+            msg = f"Missing '{df_attr}' attribute. Cannot clean data unless data is imported with 'load_dataframe' method."
+            raise AttributeError(msg)
+        
+        return df_temp
 
 
     #* ---------------------
