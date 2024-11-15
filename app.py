@@ -8,14 +8,6 @@ import pandas as pd
 from ExtractTomsForWati import AbstractHandler, AppointmentHandler, BirthdayHandler
 
 
-#!-----------------------------------
-# first round
-# 
-# 
-#!-----------------------------------
-
-
-
 #!  TODO ADD WATI API connector 
 #! https://docs.wati.io/reference/post_api-v1-sendtemplatemessages
 
@@ -77,6 +69,7 @@ class Application(tk.Tk):
         self.geometry("400x400")
         self.focus_force()
         self.eval('tk::PlaceWindow . center')
+        # self.iconbitmap("filepath_to_icon")
 
         # Define Shared properties
         self.is_processing = False
