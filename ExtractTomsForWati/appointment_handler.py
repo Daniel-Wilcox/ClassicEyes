@@ -31,6 +31,7 @@ DEFAULT_CHOSEN_HEADINGS = [
     "Name",
     "Cell",
     "Optometrists",
+    "Practice"
 ]
 
 
@@ -62,17 +63,6 @@ class AppointmentHandler(AbstractHandler):
             return x
         else:
             return np.nan
-
-    def _validate_dataframe(self, df_attr: str = "df_raw", df: pd.DataFrame | None = None):
-
-        # Set temporary DataFrame on provided DataFrame or DataFrame stored in the class attribute
-        df_temp =  df if df is not None else getattr(self, df_attr, None)
-
-        if df_temp is None:
-            msg = f"Missing '{df_attr}' attribute. Cannot clean data unless data is imported with 'load_dataframe' method."
-            raise AttributeError(msg)
-        
-        return df_temp
     
     # @abstractmethod
     def _clean_data(self, df: pd.DataFrame|None = None):
@@ -121,28 +111,41 @@ class AppointmentHandler(AbstractHandler):
 
         # Retrieve relevant dataframe and validate
         self.df_clean = self._validate_dataframe("df_clean", df)
-        df_clean = self.df_clean.copy()
+        df = self.df_clean.copy()
 
+        #TODO Add new features here
+        # Add country code and 
+        df["CountryCode"] = "27"
 
-        self.df_clean =  df if df is not None else getattr(self, "df_clean", None)
-        df_clean = self.df_clean.copy()
+        # Modify contact information for user to include country code
+        df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x[1:]))
+
+        # Add practice information:
+        #! TODO: Remove store location later
+        # Pavilion needs to include location of new store
+        practice_string = f"Classic Eyes {self.selected_practice}"
+        if self.selected_practice == "Pavilion":
+            practice_string = practice_string + " (next door to Pick 'n Pay)"
+        else:
+            practice_string = f"Classic Eyes {self.selected_practice}"
+        df["Practice"] = practice_string
 
         # Add country code column
-        #! Change phone numbers to include country code
-        #TODO Add new features here
+        
 
-        self.df_clean = df_clean
-        return df_clean
+
+        self.df_clean = df
+        return df
 
     # @abstractmethod
     def _extract_features(self, df: pd.DataFrame | None = None):
 
         # Retrieve relevant dataframe and validate
         self.df_clean = self._validate_dataframe("df_clean", df)
-        df_clean = self.df_clean.copy()
+        df = self.df_clean.copy()
 
         # !Extract desired features here
-        df_output = df_clean[self.default_headings_list].copy() 
+        df_output = df[self.default_headings_list].copy() 
         self.df_output = df_output 
 
         return df_output
@@ -157,10 +160,7 @@ class AppointmentHandler(AbstractHandler):
 
         # Set for save_path based on availability
         self.save_path = savepath or getattr(self, "save_path", None) or self._get_savepath_from_filepath()
-        # self.save_path = savepath if savepath is not None else getattr(self, "save_path", None) 
-        # if not self.save_path is None:
-        #     self.save_path = self._get_savepath_from_filepath()
-
+      
         # Check output DataFrame availability 
         if not hasattr(self, "df_output"):
             raise AttributeError("Missing 'df_output' attribute. Cannot save data unless data is provided.")
