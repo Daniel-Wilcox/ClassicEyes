@@ -1,40 +1,24 @@
 from dataclasses import dataclass, field
-from datetime import datetime
-import numpy as np
-import os
 import pandas as pd
-
 from ._abstract_handler import AbstractHandler
 
 
+### Constants and Defaults ###
+#! TODO: ensure all known junk words are provided
+CONTACT_TYPE_LIST = ["Home", "Cell", "Work", "Fax", "EMail"]
 
-# ### Constants and Defaults ###
-# #! TODO: ensure all known junk words are provided
-# REMOVE_ROWS_WITH_KEYWORDS = [
-#     'C/Lens Check',
-#     'Funded Accounts',
-#     'Private Accounts',
-#     'C/Lens Purchases',
-#     'Follow up Exam',
-#     'Spec Exam',
-# ]
 
-# #! TODO: Add in the full list of Optometrists
-# VALID_OPTOMETRIST_LIST = [
-#     "Nicci Wilcox",
-#     "Amisha Soodyall",
-#     "Sandesh Srikissoon",
-# ]
-
-# #? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
-# DEFAULT_CHOSEN_HEADINGS = [
-#     "Date",
-#     "Time",
-#     "Name",
-#     "Cell",
-#     "Optometrists",
-# ]
-
+#? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
+DEFAULT_CHOSEN_HEADINGS = [
+    "Name",
+    "Title",
+    "Birthday",
+    "BirthYear",
+    "Age",
+    "Contact",
+    "CountryCode",
+    "CellCountry"
+]
 
 DEFAULT_VALID_FILE_TYPES= [
     ".xls", 
@@ -42,140 +26,150 @@ DEFAULT_VALID_FILE_TYPES= [
 ]
 
 
-
 @dataclass
 class BirthdayHandler(AbstractHandler):
 
     # Initialize file attributes
+    #! Overwrite expected attributes to be defined within child class
     valid_file_types: list[str] = field(default_factory = lambda: DEFAULT_VALID_FILE_TYPES)
 
-    # # Initialize pd.DataFrame attributes
-    # df_raw: pd.DataFrame | None = field(default = None)
-    # df_clean: pd.DataFrame | None = field(default = None)
-    # df_output: pd.DataFrame | None = field(default = None)
-
-    # # Initialize Default attributes
-    # valid_optometrist_list: list[str] = field(default_factory = lambda: VALID_OPTOMETRIST_LIST)
-    # remove_rows_containing_list: list[str] = field(default_factory = lambda: REMOVE_ROWS_WITH_KEYWORDS)
-    # default_headings_list: list[str] = field(default_factory = lambda: DEFAULT_CHOSEN_HEADINGS)
+    #* Initialize child class's additional default attributes defined
+    find_contact_list: list[str] = field(default_factory = lambda: CONTACT_TYPE_LIST)
+    default_headings_list: list[str] = field(default_factory = lambda: DEFAULT_CHOSEN_HEADINGS)
 
 
-    def load_dataframe(self):
-        """Data is read into class variables from provided filepath"""
 
-        if not hasattr(self, "file_path"):
-            raise AttributeError("Missing 'file_path' attribute. ")
-        filepath = self.file_path
+    #* ---------------------
+    #* Transform data methods
+    #* ---------------------
 
-        # Ensure that file_path is set properly
-        if filepath and not os.path.exists(filepath):
-            raise FileNotFoundError(f"File not found: {filepath}")
-        self.file_path = filepath
+    @staticmethod
+    def _get_valid_phone_indices(df:pd.DataFrame, contact_category:str = "Cell"):
 
-        # Check file types
-        file_name = filepath.split('/')[-1]
-        file_type = file_name.split('.')[-1]
+        category_mask = (df["Contact_Type"] == contact_category)
+        has_content_mask = df["Contact"].notna() & (df["Contact"] != "")
+        valid_len_mask = df["Contact"].apply(lambda x: len(str(x)) >= 10) 
+        valid_start_mask = df["Contact"].apply(lambda x: str(x).startswith("0")) #("082", "083", "084", "079", "076", "072", "071", "078", "060", "011", "021")
+        not_zeros_mask =  (df["Contact"] != "0000000000")
+        union_mask = category_mask & has_content_mask & valid_len_mask & valid_start_mask & not_zeros_mask
 
-        if not(f".{file_type}" in self.valid_file_types):
-            raise ValueError(
-                f"{file_name} does not have valid file type: {self.valid_file_types}."
-            )
-
-        df = pd.read_excel(filepath, header = None)
-        self.df_raw = df
-
-    
-    def _assign_optometrist(self, x):
-        if x in self.valid_optometrist_list:
-            return x
-        else:
-            return np.nan
+        # Filter rows that match the contact category and have a valid phone number
+        valid_rows = df[union_mask]
+        return valid_rows.index
 
 
-    def _clean_data(self, df:pd.DataFrame|None = None):
+    # @abstractmethod
+    def _clean_data(self, df: pd.DataFrame | None = None):
         
-        # Check whether to use provided DataFrame or class provided DataFrame in self.df_raw
-        if not hasattr(self, "df_raw") or self.df_raw is None:
-            # If doesn't exist or if self.df_raw = "" or self.df_raw = None
-            
-            if not df:
-                self.df_raw = df.copy() # Update 'self.df_raw' to consider provided DataFrame 
-
-            else:
-                raise AttributeError(
-                    "Missing 'df_raw' attribute. Cannot clean data unless data is imported with 'load_dataframe' method."
-                )
-        
+        # Retrieve relevant dataframe and validate
+        self.df_raw = self._validate_dataframe("df_raw", df)
         df_raw = self.df_raw.copy()
 
-        ### Clean up Excel: ###
-        # Drop all empty rows and last row (page X of Y)
-        df_clean = df_raw.iloc[:-1].dropna(how='all').reset_index(drop=True)
+        #* Clean up Excel:
+        # Remove all empty rows and drop last row (Page 1 of 1)
+        data_rows_clean = df_raw.iloc[:-1].dropna(how='all').reset_index(drop=True)
 
-        # Remove all non-useful header rows (first 5)
-        df_clean = df_clean.iloc[6:].reset_index(drop=True)
+        # Remove all non-useful header rows )first 4
+        data_rows_clean = data_rows_clean.iloc[4:].reset_index(drop=True)
 
-        # Remove all rows with known key words from first column
-        data_mask = df_clean.loc[:, 0].isin(self.remove_rows_containing_list)
-        df_clean = df_clean[~data_mask].reset_index(drop=True)
+        # Remove all empty columns
+        data_rows_clean = data_rows_clean.dropna(axis=1, how='all')
 
-        # Remove all empty columns and rename headings based on first rows cells
-        df_clean = df_clean.dropna(axis=1, how='all')
-        df_clean.columns = df_clean.iloc[0]  # Assign row 0 to be the new headers
-        df_clean = df_clean.drop(0).reset_index(drop=True)
+        # Extract the potential column headings
+        new_col_list = data_rows_clean.iloc[0:2, :].fillna("").apply(lambda x: "".join(x), axis = 0).tolist()
 
-        dropped_columns = df_clean.columns.notna()
-        df_clean = df_clean.loc[:, dropped_columns]
+        # Validate with expected column names
+        VALID_COLUMN_NAMES = ["Birthday", "Home Address", "Postal Address", "Work Address", "Contact No."]
+        to_validate_list = [col for col in new_col_list if col]
+        faulty_columns = [col for col in to_validate_list if col not in VALID_COLUMN_NAMES]
 
-        # Assign optometrist to patient
-        df_clean["Optometrists"] = df_clean["Date"].apply(lambda x: self._assign_optometrist(x)).ffill()
-        df_clean["Date"] = df_clean["Date"].ffill()
+        # If empty then False
+        if any(faulty_columns):
+            raise ValueError(f"Unexpected column names: {', '.join(faulty_columns)}.")
 
-        # Fix Date Column
-        date_mask = pd.to_datetime(df_clean["Date"], format="%Y-%m-%d", errors="coerce").notnull()
-        df_clean = df_clean[date_mask].reset_index(drop=True)
+        # Replace empty columns with new unique names and assign to dataframe.columns
+        default_column_list = [f"col_{i+1}" for i in range(new_col_list.count(""))]
+        filler_iter = iter(default_column_list)
+        data_rows_clean.columns = [item if item != "" else next(filler_iter) for item in new_col_list]
 
-        # Fix Name column
-        df_clean["Name"] = df_clean["Name"].str.title()
+        # Remove unnecessary columns #! Possibly move or remove
+        data_rows_clean = data_rows_clean.drop(columns=["Postal Address", "Work Address"])
 
-        self.df_clean = df_clean
+        # Duplicate and rename columns
+        data_rows_clean["Name"] = data_rows_clean["Birthday"]
+        data_rows_clean["Title"] = data_rows_clean["Home Address"]
+        data_rows_clean = data_rows_clean.iloc[2:, :].rename(columns={"Contact No.":"Contact"}).reset_index(drop=True) 
 
-        return df_clean
+        # Find column that contains ContactType
+        #! Subject to change: 
+        #!  df.ContactType.unique() # [nan, 'Home', 'Cell', 'Work', 'Fax', 'EMail']
+        unknown_col_df = data_rows_clean.loc[:, default_column_list]
+        contact_col = unknown_col_df.columns[unknown_col_df.isin(self.find_contact_list).any()].tolist()
+
+        if len(contact_col) == 1:
+            data_rows_clean = data_rows_clean.rename(columns={contact_col[0]:"Contact_Type"})
+        else:
+            raise ValueError(f"Too many columns with unknown names contain the contact type keywords: {self.find_contact_list}")
+
+        # Find users in name column #! Possibly move to feature creation 
+        all_string_rows = data_rows_clean.loc[:, "Name"].apply(lambda x: isinstance(x, str) and x.replace(" ", "").isalpha())
+        user_row_index = all_string_rows.index[all_string_rows]#.to_list()
+        data_rows_clean.loc[~all_string_rows, "Name"] = None
+        data_rows_clean["Name"] = data_rows_clean["Name"].ffill().str.title()
+
+        # Get User names and titles with index to row in data_rows_clean
+        only_users_df = data_rows_clean.loc[user_row_index, ["Name", "Title"]].reset_index(drop=True).copy()
+
+        # Get user birthday #! Possibly move to feature creation 
+        birthday_row_index = user_row_index + 1
+        now_year = int(pd.to_datetime('now').year)
+
+        only_users_df["Birthday"] = pd.to_datetime(
+            data_rows_clean.loc[birthday_row_index, "Birthday"].reset_index(drop=True), errors='coerce'
+        )
+        only_users_df["BirthYear"] = only_users_df.Birthday.dt.year.astype(int)
+        only_users_df["Age"] = now_year - only_users_df['BirthYear']
+
+        # Add contact information to user #! Possibly move to feature creation
+        valid_indices = self._get_valid_phone_indices(data_rows_clean, contact_category="Cell")
+
+        only_users_df = pd.merge(
+            only_users_df, 
+            data_rows_clean.loc[valid_indices, ["Name", "Contact"]], 
+            on='Name', how='inner'
+        ) 
+
+        # Add country code and modify contact information for user #! Possibly move to feature creation
+        only_users_df["CountryCode"] = "27"
+        only_users_df["CellCountry"] = only_users_df["CountryCode"] + only_users_df["Contact"].apply(lambda x: str(x[1:]))
+        only_users_df["Name"] = only_users_df.Name.str.title()
+        only_users_df
+
+        # Assign class attribute with resulting DataFrame
+        self.df_clean = only_users_df
+
+        return only_users_df
+
+    # @abstractmethod
+    def _add_features(self, df: pd.DataFrame | None = None):
+
+        # Retrieve relevant dataframe and validate
+        self.df_clean = self._validate_dataframe("df_clean", df)
+        df = self.df_clean.copy()
 
 
-    def _add_features(self, df:pd.DataFrame|None = None):
+        # Add country code column
+        #! Change phone numbers to include country code
+        #TODO Add new features here
 
-        # Check whether to use provided DataFrame or class provided DataFrame in self.df_clean
-        if not hasattr(self, "df_clean") or self.df_clean is None:            
-            if not df:
-                self.df_clean = df.copy() # Update 'self.df_raw' to consider provided DataFrame 
-            else:
-                raise AttributeError(
-                    "Missing 'df_clean' attribute. Cannot add features to data unless data is imported with 'load_dataframe' method."
-                )
-    
-        df_clean = self.df_clean.copy()
+        self.df_clean = df
+        return df
 
+    # @abstractmethod
+    def _extract_features(self, df: pd.DataFrame | None = None):
 
-        # !Add new features here
-        ...
-
-
-        self.df_clean = df_clean
-        return df_clean
-
-    
-    def _extract_features(self, df:pd.DataFrame|None = None):
-
-        # Check whether to use provided DataFrame or class provided DataFrame in self.df_clean
-        if not hasattr(self, "df_clean") or self.df_clean is None:            
-            if not df:
-                self.df_clean = df.copy() # Update 'self.df_raw' to consider provided DataFrame 
-            else:
-                raise AttributeError(
-                    "Missing 'df_clean' attribute. Cannot add features to data unless data is imported with 'load_dataframe' method."
-                )
-    
+        # Retrieve relevant dataframe and validate
+        self.df_clean = self._validate_dataframe("df_clean", df)
         df_clean = self.df_clean.copy()
 
         # !Extract desired features here
@@ -184,48 +178,7 @@ class BirthdayHandler(AbstractHandler):
 
         return df_output
 
-
-    def process_data(self):
-        """Data in class variables is transformed"""
-
-        # Clean Data
-        self._clean_data()
-
-        # Apply new features
-        self._add_features()
-
-        # Extract Data
-        self._extract_features() 
-
-        df = self.df_output
-
-        return df
-
-        
-    def _gen_savepath_from_filepath(self) -> str:
-
-        if not hasattr(self, "file_path"):
-            raise AttributeError("Missing 'file_path' attribute.")
-        
-        filepath = self.file_path
-
-        if not filepath:
-            raise ValueError("Value of 'file_path' cannot be None. Please provide filepath correctly.")
-
-
-        # Create datetime based filename for save file
-        current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        new_filename = f"Appointments_{current_datetime}.csv"
-    
-        new_filepath = filepath.split('/')[:-1]
-        new_filepath.append(new_filename)
-
-        savepath = "/".join(new_filepath)
-        self.save_path = savepath
-
-        return savepath
-
-
+    # @abstractmethod
     def save_data(self, savepath: str|None = None):
         """Save the cleaned data to a new file in save_folder."""
 
@@ -234,78 +187,21 @@ class BirthdayHandler(AbstractHandler):
             raise AttributeError("Missing 'file_path' attribute. Cannot save data unless import data filepath is available.")
 
         # Set for save_path based on availability
-        # 1. Try get value from  save_path from 'savepath' 
-        #       If savepath=None or "", try get value from getattr(self, "save_path", None)
-        # 2. Try get value form getattr() 
-        #       If form getattr() is None (default because attribute doesn't exist or is None), generate new savepath 
-        # 3. If all else fails, generate save_path based on input file_path
-        self.save_path = savepath or getattr(self, "save_path", None) or self._gen_savepath_from_filepath()
-        saver = self.save_path
-
-        [
-        # if not hasattr(self, "save_path") and not self.save_path:
-        #     # No self.save_path
-        #     if not savepath:
-        #         self.save_path = savepath # Update self.save_path based on provided savepath
-        #     else:
-        #         self.save_path = self._gen_savepath_from_filepath() # Update self.save_path based on stored self.filepath
-        # save = self.save_path
-
-
-        # Update save path based on availability
-        # if not hasattr(self, "save_path") or not self.save_path:
-        #         self.save_path = self._gen_savepath_from_filepath()
-        # saver = self.save_path
-        ]
-
+        self.save_path = savepath or getattr(self, "save_path", None) or self._get_savepath_from_filepath()
+ 
         # Check output DataFrame availability 
         if not hasattr(self, "df_output"):
-            raise AttributeError(
-                "Missing 'df_output' attribute. Cannot save data unless data is imported and processed with 'load_dataframe' and 'process_data' method."
-            )
+            raise AttributeError("Missing 'df_output' attribute. Cannot save data unless data is provided.")
         
         # Get output pd.DataFrame and save
-        df = self.df_output        
-        df.to_csv(saver, index=False)
+        self.df_output.to_csv(self.save_path, index=False)
 
 
-    def load_and_process(self, filepath: str) -> pd.DataFrame:
-        """The main method to run the partial handler workflow i.e. Load and Process Data."""
-
-        # Assign input variables to appropriate class attributes
-        self.file_path = filepath 
-
-        self.load_dataframe()
-
-        self.process_data()
-
-        df = self.df_output
-
-        return df
-
-
-    def load_process_save(self, filepath: str, savepath: str|None = None):
-        """The main method to run the complete handler workflow."""
-
-        # Assign input variables to appropriate class attributes
-        self.file_path = filepath 
-
-        # If supplied savepath isn't available, save based on datetime name
-        if not savepath:
-            savepath = self._gen_savepath_from_filepath()
-        self.save_path = savepath 
-
-        self.load_dataframe()
-
-
-        self.process_data()
-
-        self.save_data()
 
 
 if __name__ == "__main__":
 
-    appointment_handler = BirthdayHandler()
+    birthday_handler = BirthdayHandler()
 
 
     #! --------------------------
