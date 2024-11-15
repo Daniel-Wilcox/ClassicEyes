@@ -7,6 +7,15 @@ import pandas as pd
 
 from ExtractTomsForWati import AbstractHandler, AppointmentHandler, BirthdayHandler
 
+
+#!-----------------------------------
+# first round
+# 
+# 
+#!-----------------------------------
+
+
+
 #!  TODO ADD WATI API connector 
 #! https://docs.wati.io/reference/post_api-v1-sendtemplatemessages
 
@@ -15,10 +24,13 @@ from ExtractTomsForWati import AbstractHandler, AppointmentHandler, BirthdayHand
 # Constants:    #
 # ------------- #
 ALL_WATI_HANDLERS_LIST = [
-    AppointmentHandler(), #! NEED TO ADD MORE HANDLER CLASSES
-    BirthdayHandler(),
+    AppointmentHandler, #! NEED TO ADD MORE HANDLER CLASSES
+    BirthdayHandler,
 ] 
-WATI_TEMPLATE_DICT = {str(cls): cls for cls in ALL_WATI_HANDLERS_LIST}
+WATI_TEMPLATE_DICT = {
+    cls.__name__.removesuffix("Handler") : cls 
+    for cls in ALL_WATI_HANDLERS_LIST
+}
 
 CE_PRACTICE_LIST = [
     "Pavilion",
@@ -88,7 +100,7 @@ class Application(tk.Tk):
     
         # Show first page
         first_page = next(iter(application_page_list))
-        self.show_page(first_page)
+        self.show_page(first_page, reset_defaults=False)
 
     def show_page(self, page_class, reset_defaults=True):
         page: AbstractPage
@@ -102,13 +114,17 @@ class Application(tk.Tk):
 
 class HomePage(AbstractPage):
 
+    def __init__(self, parent, controller):
+        self.template_list = list(WATI_TEMPLATE_DICT.keys())
+        super().__init__(parent, controller)
+
     def load_widgets(self):
 
         # Dropdown menu for message template type
-        self.template_label = tk.Label(self, text=self.template_label_default.get())
+        # self.template_label = tk.Label(self, text=self.template_label_default.get())
+        self.template_label = tk.Label(self, textvariable=self.template_label_default)
         self.template_label.pack(pady = 10)
-        template_list = list(WATI_TEMPLATE_DICT.keys())
-        self.template_menu = tk.OptionMenu(self, self.template_default, *template_list)
+        self.template_menu = tk.OptionMenu(self, self.template_default, *self.template_list)
         self.template_menu.pack(pady = 5)
 
         # Dropdown menu for Classic Eyes Practice
@@ -157,8 +173,8 @@ class HomePage(AbstractPage):
         self.controller.show_page(LoadingPage)
         self.controller.app_pages[LoadingPage]._start_loading()
  
-        # Get Handler
-        process_handler = WATI_TEMPLATE_DICT[selected_template]
+        # Get Handler and supply selected practice
+        process_handler = WATI_TEMPLATE_DICT[selected_template](selected_practice = selected_practice)
         self.controller.SelectedHandler = process_handler
 
         # Start processing in a new thread to avoid freezing the UI
@@ -174,7 +190,6 @@ class HomePage(AbstractPage):
         # Start checking for the thread's completion
         self._check_thread()
 
-
     def _check_thread(self):
         alive_thread = self.processing_thread.is_alive()
         is_processing = self.controller.is_processing
@@ -189,8 +204,6 @@ class HomePage(AbstractPage):
         else:
             self._completed_process_callback()
 
-
-
     def _process_file_to_template(self, selected_template: str, selected_practice: str):
 
         try:
@@ -204,7 +217,6 @@ class HomePage(AbstractPage):
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")
             raise
-
 
     def _process_file_with_handler(self, process_handler: AbstractHandler, file_path: str):
         # Apply appropriate Handler class with 
@@ -225,7 +237,7 @@ class HomePage(AbstractPage):
 
         # Dropdown menu for message template type
         self.template_label_default = tk.StringVar(value="Select Wati Template Type")
-        self.template_default = tk.StringVar(value=list(WATI_TEMPLATE_DICT.keys())[0])
+        self.template_default = tk.StringVar(value=next(iter(self.template_list)))
 
         # Dropdown menu for Classic Eyes Practice
         self.practice_label_default = tk.StringVar(value="Select Classic Eyes Practice")
@@ -343,6 +355,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
