@@ -8,8 +8,8 @@ import os
 class AbstractHandler(ABC):
 
     # Initialize file attributes
-    file_path: str|None = field(default = None)
-    save_path: str|None = field(default = None)
+    file_path: str | None = field(default = None)
+    save_path: str | None = field(default = None)
     valid_file_types: list[str] = field(default_factory = list, init = False) #! Expected to be defined in child
 
     # Initialize pd.DataFrame attributes
@@ -86,18 +86,53 @@ class AbstractHandler(ABC):
     
     @abstractmethod
     def _clean_data(self, df: pd.DataFrame | None = None):
-        """Abstract method for cleaning data. Must be implemented by subclasses."""
+        """Abstract method for cleaning data. Must be implemented by subclasses. It is recommended to use the following as the start of the method when implemented so that you can use the `transform_data` method correctly.
+
+        ## Recommended initial code for `_clean_data` method.
+         
+        Retrieve relevant dataframe and validate
+
+        ```python
+        self.df_raw = self._validate_dataframe("df_raw", df)
+        df_raw = self.df_raw.copy()
+        ```
+        
+        """
         pass
 
     @abstractmethod
     def _add_features(self, df: pd.DataFrame | None = None):
-        """Abstract method for adding features. Must be implemented by subclasses."""
+        """Abstract method for adding features.. Must be implemented by subclasses. It is recommended to use the following as the start of the method when implemented so that you can use the `transform_data` method correctly.
+
+        ## Recommended initial code for `_clean_data` method.
+         
+        Retrieve relevant dataframe and validate
+
+        ```python
+        self.df_raw = self._validate_dataframe("df_raw", df)
+        df_raw = self.df_raw.copy()
+        ```
+        
+        """
+
         pass
 
-    @abstractmethod
-    def _extract_features(self, df: pd.DataFrame | None = None):
-        """Abstract method for extracting features. Must be implemented by subclasses."""
-        pass
+    def _extract_features(self, df: pd.DataFrame | None = None, headings: list | None = None):
+        
+        # Retrieve df_clean dataframe and validate
+        # df_clean is ALWAYS the final data before output
+        self.df_clean = self._validate_dataframe("df_clean", df)
+        df_clean = self.df_clean.copy()
+
+        # Extract desired features 
+        if not headings:
+            df_output = df_clean.copy() 
+        else:
+            df_output = df_clean[headings].copy() 
+
+        self.df_output = df_output 
+
+        return df_output
 
 
     #* ---------------------

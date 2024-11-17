@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-import numpy as np
 import pandas as pd
 
 from ._abstract_handler import AbstractHandler
@@ -26,12 +25,7 @@ VALID_OPTOMETRIST_LIST = [
 
 #? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
 DEFAULT_CHOSEN_HEADINGS = [
-    "Date",
-    "Time",
-    "Name",
-    "Cell",
-    "Optometrists",
-    "Practice"
+    "Date", "Time", "Name", "Cell", "Optometrists", "Practice", "CountryCode", "CellCountry"
 ]
 
 
@@ -62,10 +56,10 @@ class AppointmentHandler(AbstractHandler):
         if x in self.valid_optometrist_list:
             return x
         else:
-            return np.nan
+            return float("nan") #! Check if can remove np.nan and replace with None
     
     # @abstractmethod
-    def _clean_data(self, df: pd.DataFrame|None = None):
+    def _clean_data(self, df: pd.DataFrame | None = None):
 
         # Retrieve relevant dataframe and validate
         self.df_raw = self._validate_dataframe("df_raw", df)
@@ -87,18 +81,22 @@ class AppointmentHandler(AbstractHandler):
         df_clean.columns = df_clean.iloc[0]  # Assign row 0 to be the new headers
         df_clean = df_clean.drop(0).reset_index(drop=True)
 
+        # Remove unnecessary columns
         dropped_columns = df_clean.columns.notna()
         df_clean = df_clean.loc[:, dropped_columns]
+        df_clean = df_clean.drop(
+            columns = ["PatientNo", "Home", "Work", "Medical Aid", "Plan", "Number"]
+        )        
 
-        # Assign optometrist to patient
+        # Assign an optometrist to patient from the 'Date' column
         df_clean["Optometrists"] = df_clean["Date"].apply(lambda x: self._assign_optometrist(x)).ffill()
-        df_clean["Date"] = df_clean["Date"].ffill()
 
-        # Fix Date Column
+        # Keep only valid dates in 'Date' Column
+        df_clean["Date"] = df_clean["Date"].ffill()
         date_mask = pd.to_datetime(df_clean["Date"], format="%Y-%m-%d", errors="coerce").notnull()
         df_clean = df_clean[date_mask].reset_index(drop=True)
 
-        # Fix Name column
+        # Ensure users names in 'Name' column are titled
         df_clean["Name"] = df_clean["Name"].str.title()
 
         # Assign class attribute with resulting DataFrame
@@ -108,21 +106,13 @@ class AppointmentHandler(AbstractHandler):
 
     # @abstractmethod
     def _add_features(self, df: pd.DataFrame | None = None):
-
+        
         # Retrieve relevant dataframe and validate
         self.df_clean = self._validate_dataframe("df_clean", df)
         df = self.df_clean.copy()
 
-        #TODO Add new features here
-        # Add country code and 
-        df["CountryCode"] = "27"
-
-        # Modify contact information for user to include country code
-        df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x[1:]))
-
         # Add practice information:
-        #! TODO: Remove store location later
-        # Pavilion needs to include location of new store
+        #! TODO: Remove store location later - Pavilion needs to include location of new store
         practice_string = f"Classic Eyes {self.selected_practice}"
         if self.selected_practice == "Pavilion":
             practice_string = practice_string + " (next door to Pick 'n Pay)"
@@ -130,28 +120,19 @@ class AppointmentHandler(AbstractHandler):
             practice_string = f"Classic Eyes {self.selected_practice}"
         df["Practice"] = practice_string
 
-        # Add country code column
+        ## Add country code and modify contact information for user
+        df["CountryCode"] = "27"
+        df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x[1:]))
+
+        # Reorder Dataframe
+        df = df.reindex(self.default_headings_list, axis = 1)
         
-
-
         self.df_clean = df
         return df
 
-    # @abstractmethod
-    def _extract_features(self, df: pd.DataFrame | None = None):
-
-        # Retrieve relevant dataframe and validate
-        self.df_clean = self._validate_dataframe("df_clean", df)
-        df = self.df_clean.copy()
-
-        # !Extract desired features here
-        df_output = df[self.default_headings_list].copy() 
-        self.df_output = df_output 
-
-        return df_output
 
     # @abstractmethod
-    def save_data(self, savepath: str|None = None):
+    def save_data(self, savepath: str | None = None):
         """Save the cleaned data to a new file in save_folder."""
 
         # Check for file_path availability
@@ -173,16 +154,6 @@ if __name__ == "__main__":
     appointment_handler = AppointmentHandler()
 
 
-    #! --------------------------
-    #! DATA OUTPUT EXPECTATIONS
-    #! --------------------------
-    # Number: 27832319744
-    # Name: Daniel Wilcox
-    # Date: 13/11/2024
-    # Time: 9:30
-    # Practice: CE PV (next door to Pick 'n Pay)
-    # Optometrist: Nicci Wilcox
-    #! --------------------------
 
 
 
