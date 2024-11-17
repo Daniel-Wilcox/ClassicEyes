@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-
 import pandas as pd
 
 from ExtractTomsForWati import AbstractHandler, AppointmentHandler, BirthdayHandler
@@ -90,10 +89,10 @@ class Application(tk.Tk):
         for page in self.app_pages.values():
             page.grid(row = 0, column = 0, sticky ="nsew")
 
-    
         # Show first page
         first_page = next(iter(application_page_list))
         self.show_page(first_page, reset_defaults=False)
+
 
     def show_page(self, page_class, reset_defaults=True):
         page: AbstractPage
@@ -108,13 +107,32 @@ class Application(tk.Tk):
 class HomePage(AbstractPage):
 
     def __init__(self, parent, controller):
+        # List defaults
         self.template_list = list(WATI_TEMPLATE_DICT.keys())
+        self.practice_list = CE_PRACTICE_LIST
+
+        # Dropdown menu template defaults
+        self.template_label_default = tk.StringVar(value = "Select Wati Template Type: ")
+        self.template_default = tk.StringVar(value = self.template_list[0])
+
+        # Dropdown menu for Classic Eyes Practice
+        self.practice_label_default = tk.StringVar(value = "Select Classic Eyes Practice: ")
+        self.practice_default = tk.StringVar(value = self.practice_list[0])
+
+        # File upload space
+        self.file_label_default = tk.StringVar(value = "Upload Relevant TOM's Report: ")
+        self.file_path_label_default = tk.StringVar(value = "No file selected")
+        self.selected_filepath = None
+
+        # Call the superclass constructor
         super().__init__(parent, controller)
+        
+
 
     def load_widgets(self):
+        print('Home: Load Widgets')
 
         # Dropdown menu for message template type
-        # self.template_label = tk.Label(self, text=self.template_label_default.get())
         self.template_label = tk.Label(self, textvariable=self.template_label_default)
         self.template_label.pack(pady = 10)
         self.template_menu = tk.OptionMenu(self, self.template_default, *self.template_list)
@@ -228,23 +246,18 @@ class HomePage(AbstractPage):
         self.controller.SelectedHandler = None
         self.controller.handle_output = None
 
-        # Dropdown menu for message template type
-        self.template_label_default = tk.StringVar(value="Select Wati Template Type")
-        self.template_default = tk.StringVar(value=next(iter(self.template_list)))
+        # Update template dropdown menu type
+        self.template_default.set(self.template_list[0])
 
-        # Dropdown menu for Classic Eyes Practice
-        self.practice_label_default = tk.StringVar(value="Select Classic Eyes Practice")
-        self.practice_default = tk.StringVar(value=next(iter(CE_PRACTICE_LIST)))
+        # update Classic Eyes Practice dropdown menu
+        self.practice_default.set(self.practice_list[0])
 
         # File upload space
-        self.file_label_default = tk.StringVar(value="Upload Relevant TOM's Report")
-        self.file_path_label_default = tk.StringVar(value="No file selected")
-
+        self.selected_filepath = None
         if hasattr(self, 'file_path_label'):
             self.file_path_label.config(text = self.file_path_label_default.get())
             
-        self.selected_filepath = None
-   
+
 class LoadingPage(AbstractPage):
     
     def load_widgets(self):
@@ -348,3 +361,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# TODO Gen another doesn't reset home variables correctly
+# TODO clearly the issue is a problem with variable resettings
