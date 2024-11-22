@@ -10,16 +10,9 @@ CONTACT_TYPE_LIST = ["Home", "Cell", "Work", "Fax", "EMail"]
 
 #? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
 DEFAULT_CHOSEN_HEADINGS = [
-    "Name",
-    "Title",
-    "Birthday",
-    "BirthYear",
-    "Age",
-    "Contact",
-    "CountryCode",
-    "CellCountry", 
-    "Practice"
+    "CellCountry", "Name", "Practice", "Birthday", "Age"
 ]
+# "Name", "Title", "Birthday", "BirthYear", "Age", "Contact", "CountryCode", "CellCountry",  "Practice"
 
 
 DEFAULT_VALID_FILE_TYPES= [

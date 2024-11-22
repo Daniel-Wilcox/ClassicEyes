@@ -21,12 +21,14 @@ VALID_OPTOMETRIST_LIST = [
     "Nicci Wilcox",
     "Amisha Soodyall",
     "Sandesh Srikissoon",
-    "Stefan van der Westhuizen"
+    "Stefan van der Westhuizen",
 ]
 
-#? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
+#? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists    
+# "Date", "Time", "Name", "Cell", "Optometrists", "Practice", "CountryCode", "CellCountry"
+
 DEFAULT_CHOSEN_HEADINGS = [
-    "Date", "Time", "Name", "Cell", "Optometrists", "Practice", "CountryCode", "CellCountry"
+    "CellCountry", "Name", "Optometrists", "Practice", "Date", "Time" 
 ]
 
 
@@ -125,9 +127,15 @@ class AppointmentHandler(AbstractHandler):
         df["CountryCode"] = "27"
         df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x[1:]))
 
+        # Make the columns have dtypes
+        df["Date"] = pd.to_datetime(df["Date"]).dt.date
+
+        # CountryCell, Patient, Optometrist, Practice, Date, Time
+        
         # Reorder Dataframe
         df = df.reindex(self.default_headings_list, axis = 1)
-        
+
+
         self.df_clean = df
         return df
 
