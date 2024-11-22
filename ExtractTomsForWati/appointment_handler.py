@@ -21,6 +21,7 @@ VALID_OPTOMETRIST_LIST = [
     "Nicci Wilcox",
     "Amisha Soodyall",
     "Sandesh Srikissoon",
+    "Stefan van der Westhuizen"
 ]
 
 #? CAN_CHANGE: These are the headings of the final dataframe, free to changeAdd in the full list of Optometrists
