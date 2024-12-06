@@ -139,7 +139,7 @@ class AppointmentHandler(AbstractHandler):
 
         ## Add country code and modify contact information for user
         df["CountryCode"] = "27"
-        df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x[1:]))
+        df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x)[1:])
 
         # Make the columns have dtypes
         df["Date"] = pd.to_datetime(df["Date"]).dt.date
