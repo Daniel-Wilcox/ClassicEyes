@@ -141,6 +141,11 @@ class AppointmentHandler(AbstractHandler):
         df["CountryCode"] = "27"
         df["CellCountry"] = df["CountryCode"] + df["Cell"].apply(lambda x: str(x)[1:])
 
+        valid_country_cell_mask = df["CellCountry"].apply(
+            lambda x: len(x) == 11 and x.isdigit()
+        )
+        df[valid_country_cell_mask].reset_index(drop=True)
+
         # Make the columns have dtypes
         df["Date"] = pd.to_datetime(df["Date"]).dt.date
 

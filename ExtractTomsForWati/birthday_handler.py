@@ -205,6 +205,11 @@ class BirthdayHandler(AbstractHandler):
             lambda x: str(x)[1:]
         )
 
+        valid_country_cell_mask = df["CellCountry"].apply(
+            lambda x: len(x) == 11 and x.isdigit()
+        )
+        df[valid_country_cell_mask].reset_index(drop=True)
+
         # Reorder Dataframe
         df = df.reindex(self.default_headings_list, axis=1)
 
