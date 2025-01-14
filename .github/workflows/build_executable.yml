@@ -48,7 +48,11 @@ jobs:
 
       - name: Set up platform-specific Python environment
         run: |
-          python -m venv .venv
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            py -m venv .venv
+          else
+            python -m venv .venv
+          fi
           source .venv/bin/activate || .\.venv\Scripts\activate
           pip install -r requirements.txt
 
