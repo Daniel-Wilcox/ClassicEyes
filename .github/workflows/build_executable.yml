@@ -60,11 +60,14 @@ jobs:
         run: |
           source .venv/bin/activate || .\.venv\Scripts\activate
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed
+            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed --clean
+
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed
+            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed --clean
+
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed
+            pyinstaller app.py --name "${pyinstaller_app_name}" --onedir --windowed --clean
+
           fi
 
       - name: Rename and Zip build folder
