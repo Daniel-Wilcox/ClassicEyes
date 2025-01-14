@@ -25,6 +25,23 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set version and app name
+        run: |
+          version=$(git describe --tags)
+          echo "App version: ${sanitized_version}"
+
+          sanitized_version=$(echo "$version" | sed 's/\./-/g')
+          echo "Sanitized app version: ${sanitized_version}"
+
+          sanitized_app_name=$(echo "$APP_NAME" | sed 's/ /-/g' | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Sanitized app name: ${sanitized_app_name}" 
+
+          pyinstaller_app_name=$(echo "$APP_NAME $version" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Pyinstaller app name: ${pyinstaller_app_name}"
+
+          app_path_name=$(echo "${sanitized_app_name}_${sanitized_version}" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Application path name: ${app_path_name}"
+
       - name: Set up platform-specific Python environment
         run: |
           python -m venv .venv
@@ -34,38 +51,36 @@ jobs:
       - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            pyinstaller app.py --name $APP_NAME --onedir --windowed
+            pyinstaller app.py --name $pyinstaller_app_name --onedir --windowed
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            pyinstaller app.py --name $APP_NAME --onedir --windowed
+            pyinstaller app.py --name $pyinstaller_app_name --onedir --windowed
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            pyinstaller app.py --name $APP_NAME --onedir --windowed
+            pyinstaller app.py --name $pyinstaller_app_name --onedir --windowed
           fi
 
       - name: Rename and Zip build folder
         run: |
-          version=$(git describe --tags)
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            mv dist "${APP_NAME}_${version}_linux"
-            zip -r ${APP_NAME}_{version}_linux.zip ${APP_NAME}_{version}_linux
-            mkdir -p releases/$version
-            mv ${APP_NAME}_{version}_linux.zip releases/$version/
+            mv dist "${app_path_name}_linux"
+            zip -r ${app_path_name}_linux.zip ${app_path_name}_linux
+            mkdir -p releases/${sanitized_version}
+            mv ${app_path_name}_linux.zip releases/$sanitized_version/
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            mv dist "${APP_NAME}_{version}_macos"
-            zip -r ${APP_NAME}_{version}_macos.zip ${APP_NAME}_{version}_macos
-            mkdir -p releases/$version
-            mv ${APP_NAME}_{version}_macos.zip releases/$version/
+            mv dist "${app_path_name}_macos"
+            zip -r ${app_path_name}_macos.zip ${app_path_name}_macos
+            mkdir -p releases/$sanitized_version
+            mv ${app_path_name}_macos.zip releases/$sanitized_version/
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            mv dist "${APP_NAME}_{version}_windows"
-            zip -r ${APP_NAME}_{version}_windows.zip ${APP_NAME}_{version}_windows
-            mkdir -p releases/$version
-            mv ${APP_NAME}_{version}_windows.zip releases/$version/
+            mv dist "${app_path_name}_windows"
+            zip -r ${app_path_name}_windows.zip ${app_path_name}_windows
+            mkdir -p releases/$sanitized_version
+            mv ${app_path_name}_windows.zip releases/$sanitized_version/
 
       - name: Update README.md with latest links
         run: |
-          version=$(git describe --tags)
-          link_windows="./releases/${version}/${APP_NAME}_{version}_windows.zip"
-          link_macos="./releases/${version}/${APP_NAME}_{version}_macos.zip"
-          link_linux="./releases/${version}/${APP_NAME}_{version}_linux.zip"
+          link_windows="./releases/${sanitized_version}/${app_path_name}_windows.zip"
+          link_macos="./releases/${sanitized_version}/${app_path_name}_macos.zip"
+          link_linux="./releases/${sanitized_version}/${app_path_name}_linux.zip"
           sed -i.bak "s|Windows: .*|Windows: [Download v${version}](${link_windows})|g" ./README.md
           sed -i.bak "s|MacOs: .*|MacOs: [Download v${version}](${link_macos})|g" ./README.md
           sed -i.bak "s|Linux: .*|Linux: [Download v${version}](${link_linux})|g" ./README.md
@@ -74,6 +89,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add releases/$version/ README.md
+          git add releases/$sanitized_version/ README.md
           git commit -m "Add zipped executable files and updated README.md for version ${version}."
           git push origin main
