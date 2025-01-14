@@ -1,0 +1,79 @@
+name: Build Executable
+run-name: ${{ github.actor }} is building application executables with GitHub Actions 🛠️
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    env:
+      APP_NAME: "DAVE$ Wati Extractor"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Set up platform-specific Python environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate || .\.venv\Scripts\activate
+          pip install -r requirements.txt
+
+      - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            pyinstaller app.py --name $APP_NAME --onedir --windowed
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            pyinstaller app.py --name $APP_NAME --onedir --windowed
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            pyinstaller app.py --name $APP_NAME --onedir --windowed
+          fi
+
+      - name: Rename and Zip build folder
+        run: |
+          version=$(git describe --tags)
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            mv dist "${APP_NAME}_${version}_linux"
+            zip -r ${APP_NAME}_{version}_linux.zip ${APP_NAME}_{version}_linux
+            mkdir -p releases/$version
+            mv ${APP_NAME}_{version}_linux.zip releases/$version/
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            mv dist "${APP_NAME}_{version}_macos"
+            zip -r ${APP_NAME}_{version}_macos.zip ${APP_NAME}_{version}_macos
+            mkdir -p releases/$version
+            mv ${APP_NAME}_{version}_macos.zip releases/$version/
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            mv dist "${APP_NAME}_{version}_windows"
+            zip -r ${APP_NAME}_{version}_windows.zip ${APP_NAME}_{version}_windows
+            mkdir -p releases/$version
+            mv ${APP_NAME}_{version}_windows.zip releases/$version/
+
+      - name: Update README.md with latest links
+        run: |
+          version=$(git describe --tags)
+          link_windows="./releases/${version}/${APP_NAME}_{version}_windows.zip"
+          link_macos="./releases/${version}/${APP_NAME}_{version}_macos.zip"
+          link_linux="./releases/${version}/${APP_NAME}_{version}_linux.zip"
+          sed -i.bak "s|Windows: .*|Windows: [Download v${version}](${link_windows})|g" ./README.md
+          sed -i.bak "s|MacOs: .*|MacOs: [Download v${version}](${link_macos})|g" ./README.md
+          sed -i.bak "s|Linux: .*|Linux: [Download v${version}](${link_linux})|g" ./README.md
+
+      - name: Commit and push all changes (zip files and README.md)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases/$version/ README.md
+          git commit -m "Add zipped executable files and updated README.md for version ${version}."
+          git push origin main

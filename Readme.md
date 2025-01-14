@@ -1,6 +1,10 @@
 # How to use this folder
 This ReadMe is a guide to using this code effectively locally.
 
+# Download latest:
+Windows: {link-latest-windows-executable-zip}
+MacOs: {link-latest-macos-executable-zip}
+Linux: {link-latest-linux-executable-zip}
 
 ```bash
 pyinstaller app.py --onedir --windowed --icon=myicon.ico  # Windows
