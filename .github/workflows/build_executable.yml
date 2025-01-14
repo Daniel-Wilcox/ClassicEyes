@@ -27,8 +27,12 @@ jobs:
 
       - name: Set version and app name
         run: |
-          version=$(git describe --tags)
-          echo "App version: ${sanitized_version}"
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" || "${{ matrix.os }}" == "macos-latest" ]]; then
+            version=$(git describe --tags)
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            version=$(git describe --tags | powershell -Command "$input = Get-Content -Raw; Write-Output $input")
+          fi
+          echo "App version: ${version}"
 
           sanitized_version=$(echo "$version" | sed 's/\./-/g')
           echo "Sanitized app version: ${sanitized_version}"
