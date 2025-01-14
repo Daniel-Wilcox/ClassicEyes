@@ -62,13 +62,13 @@ jobs:
 
       - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
         run: |
-
-
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            .\.venv\Scripts\activate
             pyinstaller app.py --name "${pyinstaller_app_name}"  ^
             --onedir --windowed --noconfirm --clean
 
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            source .venv/bin/activate
             pyinstaller app.py --name "${pyinstaller_app_name}"  \
             --onedir --windowed --noconfirm --clean
           fi
@@ -80,7 +80,6 @@ jobs:
             ren dist ${app_path_name}_windows
             zip -rq ${app_path_name}_windows.zip ${app_path_name}_windows
             move ${app_path_name}_macos.zip releases\${sanitized_version}\
-
 
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             mkdir -p releases/${sanitized_version}
