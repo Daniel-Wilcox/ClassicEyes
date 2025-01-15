@@ -75,4 +75,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "Added zipped MacOs executable files and updated README.md for version ${version}."
-          git push
+          git push -f origin main
