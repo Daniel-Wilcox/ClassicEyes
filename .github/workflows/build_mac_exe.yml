@@ -81,7 +81,7 @@ jobs:
           author_email: github-actions[bot]@users.noreply.github.com
           message: Added zipped MacOs executable files and updated README.md for version ${version}.
           add: |
-            - releases/${sanitized_version}/${app_path_name}_macos.zip 
+            - "releases/${sanitized_version}/${app_path_name}_macos.zip" 
             - README.md
 
       # - name: Commit and push all changes (zip files and README.md)
