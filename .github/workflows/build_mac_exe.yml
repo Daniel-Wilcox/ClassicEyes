@@ -40,7 +40,7 @@ jobs:
           echo "Pyinstaller app name: ${pyinstaller_app_name}"
           echo "pyinstaller_app_name=${pyinstaller_app_name}" >> $GITHUB_ENV
 
-          app_path_name=$(echo "${sanitized_app_name}_${sanitized_version}" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          app_path_name=$(echo "${sanitized_app_name}_${sanitized_version}" | sed 's/[^a-zA-Z0-9_\-\/\.]//g')  # Remove non-filepath characters
           echo "Application path name: ${app_path_name}"
           echo "app_path_name=${app_path_name}" >> $GITHUB_ENV
 
