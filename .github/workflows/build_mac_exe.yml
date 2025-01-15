@@ -86,7 +86,5 @@ jobs:
           git add -f releases/${sanitized_version}/${app_path_name}_macos.zip 
           git add README.md
 
-          echo (git status)
-
           git commit -m "Added zipped MacOs executable files and updated README.md for version ${version}."
-          git push origin main
+          git push origin
