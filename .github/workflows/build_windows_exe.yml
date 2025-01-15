@@ -1,4 +1,4 @@
-name: Build Executable
+name: Build Windows Executable
 run-name: ${{ github.actor }} is building application Windows executables with GitHub Actions 🛠️
 
 on:
