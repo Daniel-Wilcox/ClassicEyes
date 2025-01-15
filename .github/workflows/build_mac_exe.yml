@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
 
     env:
-      APP_NAME: "DAVE$ Wati Extractor"
+      APP_NAME: "DAVES Wati Extractor"
 
     steps:
       - name: Checkout code
