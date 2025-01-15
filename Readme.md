@@ -4,7 +4,7 @@ This ReadMe is a guide to using this code effectively locally.
 # Download latest:
 Windows: [Download v0.0](./releases/v0.0/DAVE$-Wati-Extractor_v0_windows.zip)
 
-MacOs: [Download v0.1.45](./releases/v0-1-45/DAVES-Wati-Extractor_v0-1-45_macos.zip)
+MacOs: [Download v0.1.48](./releases/v0-1-48/DAVES-Wati-Extractor_v0-1-48_macos.zip)
 
 ```bash
 pyinstaller app.py --onedir --windowed --icon=myicon.ico  # Windows
