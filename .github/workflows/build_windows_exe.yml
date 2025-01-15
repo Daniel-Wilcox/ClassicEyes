@@ -1,0 +1,79 @@
+name: Build Executable
+run-name: ${{ github.actor }} is building application executables with GitHub Actions 🛠️
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    env:
+      APP_NAME: "DAVE$ Wati Extractor"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Set version and app name
+        run: |
+          version=$(git describe --tags | powershell -Command "$input = Get-Content -Raw; Write-Output $input")
+          echo "App version: ${version}"
+
+          sanitized_version=$(echo "$version" | sed 's/\./-/g')
+          echo "Sanitized app version: ${sanitized_version}"
+
+          sanitized_app_name=$(echo "$APP_NAME" | sed 's/ /-/g' | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Sanitized app name: ${sanitized_app_name}" 
+
+          pyinstaller_app_name=$(echo "$APP_NAME $version" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Pyinstaller app name: ${pyinstaller_app_name}"
+
+          app_path_name=$(echo "${sanitized_app_name}_${sanitized_version}" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Application path name: ${app_path_name}"
+
+      - name: Set up platform-specific Python environment
+        run: |
+          py -m venv .venv
+          .\.venv\Scripts\activate
+          py -m pip install --upgrade pip
+          py -m pip install -r requirements.txt
+
+      - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
+        run: |
+          .\.venv\Scripts\activate
+          pyinstaller app.py --name "${pyinstaller_app_name}"  ^
+          --onedir --windowed --noconfirm --clean
+
+      - name: Rename and Zip build distribution folder
+        run: |
+          .\.venv\Scripts\activate
+          mkdir  \releases\${sanitized_version}
+          ren dist ${app_path_name}_windows
+          zip -rq ${app_path_name}_windows.zip ${app_path_name}_windows
+          move ${app_path_name}_macos.zip releases\${sanitized_version}\
+
+      - name: Update README.md with latest links
+        run: |
+          .\.venv\Scripts\activate
+          link_windows=".\releases\${sanitized_version}\${app_path_name}_windows.zip"            
+          powershell -Command "(Get-Content README.md) -replace 'Windows: .*', 'Windows: [Download ${version}](${link_windows})' | Set-Content README.md"
+
+      - name: Commit and push all changes (zip files and README.md)
+        run: |
+          .\.venv\Scripts\activate
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases/${sanitized_version}/ README.md
+
+          link_windows=".\releases\${sanitized_version}\${app_path_name}_windows.zip"            
+          powershell -Command "(Get-Content README.md) -replace 'Windows: .*', 'Windows: [Download ${version}](${link_windows})' | Set-Content README.md"
+          git commit -m "Added zipped windows executable files and updated README.md for version ${version}."
+          git push origin main
