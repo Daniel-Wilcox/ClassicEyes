@@ -73,11 +73,16 @@ jobs:
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" README.md
 
       - name: Commit and push all changes (zip files and README.md)
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: github-actions[bot]
-          author_email: github-actions[bot]@users.noreply.github.com
-          message: "Added zipped MacOs executable files and updated README.md for version ${version}."
-          add: |
-            - releases/${sanitized_version}/${app_path_name}_macos.zip 
-            - README.md
+        run: |
+          source .venv/bin/activate
+          echo (ls)
+          echo (git status)
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -f releases/${sanitized_version}/${app_path_name}_macos.zip 
+          git add README.md
+
+          git commit -m "Added zipped MacOs executable files and updated README.md for version ${version}."
+          git push origin main
