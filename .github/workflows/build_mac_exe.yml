@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -55,14 +53,13 @@ jobs:
 
       - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
         run: |
-          # source .venv/bin/activate
-          echo ${pyinstaller_app_name}
+          source .venv/bin/activate
+          echo "Pyinstaller app name: ${pyinstaller_app_name}"
           pyinstaller app.py --name "${pyinstaller_app_name}"  \
           --onedir --windowed --noconfirm --clean
 
       - name: Rename and Zip build distribution folder
         run: |
-          # source .venv/bin/activate
           mkdir -p releases/${sanitized_version}
           mv -f dist ${app_path_name}_macos
           zip -rq ${app_path_name}_macos.zip ${app_path_name}_macos
@@ -70,7 +67,6 @@ jobs:
 
       - name: Update README.md with latest links
         run: |
-          # source .venv/bin/activate
           link_macos="./releases/${sanitized_version}/${app_path_name}_macos.zip"
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" README.md
 
