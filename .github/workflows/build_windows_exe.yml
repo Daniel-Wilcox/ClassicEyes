@@ -76,9 +76,9 @@ jobs:
           .\.venv\Scripts\activate
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add releases/${sanitized_version}/ README.md
 
-          link_windows=".\releases\${sanitized_version}\${app_path_name}_windows.zip"            
-          powershell -Command "(Get-Content README.md) -replace 'Windows: .*', 'Windows: [Download ${version}](${link_windows})' | Set-Content README.md"
+          git add ./releases/${sanitized_version}/${app_path_name}_macos.zip 
+          git add ./README.md
+
           git commit -m "Added zipped windows executable files and updated README.md for version ${version}."
           git push origin main
