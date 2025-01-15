@@ -70,7 +70,7 @@ jobs:
         run: |
           source .venv/bin/activate
           link_macos="./releases/${sanitized_version}/${app_path_name}_macos.zip"
-          sed -i "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" README.md
+          sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" README.md
 
       - name: Commit and push all changes (zip files and README.md)
         run: |
