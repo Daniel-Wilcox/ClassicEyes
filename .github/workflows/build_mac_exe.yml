@@ -14,8 +14,11 @@ jobs:
       APP_NAME: "DAVES Wati Extractor"
 
     steps:
-      - name: Checkout code
+      - name: Checkout Github repository Head
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          run: git checkout HEAD^
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -72,6 +75,8 @@ jobs:
           link_macos="./releases/${sanitized_version}/${app_path_name}_macos.zip"
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" README.md
 
+          cat Readme.md
+
       - name: Commit and push all changes (zip files and README.md)
         run: |
           source .venv/bin/activate
@@ -80,6 +85,8 @@ jobs:
 
           git add -f releases/${sanitized_version}/${app_path_name}_macos.zip 
           git add README.md
+
+          echo (git status)
 
           git commit -m "Added zipped MacOs executable files and updated README.md for version ${version}."
           git push origin main
