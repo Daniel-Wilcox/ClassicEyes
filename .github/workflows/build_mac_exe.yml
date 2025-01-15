@@ -79,5 +79,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add Readme.md releases/*
+          git status
           git commit -m "Added zipped MacOs executable files and updated Readme.md for version ${version}."
           git push -f
