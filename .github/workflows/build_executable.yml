@@ -62,19 +62,21 @@ jobs:
 
       - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
         run: |
+          source .venv/bin/activate || .\.venv\Scripts\activate
+
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            .\.venv\Scripts\activate
             pyinstaller app.py --name "${pyinstaller_app_name}"  ^
             --onedir --windowed --noconfirm --clean
 
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            source .venv/bin/activate
             pyinstaller app.py --name "${pyinstaller_app_name}"  \
             --onedir --windowed --noconfirm --clean
           fi
 
       - name: Rename and Zip build distribution folder
         run: |
+          source .venv/bin/activate || .\.venv\Scripts\activate
+
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             mkdir  \releases\${sanitized_version}
             ren dist ${app_path_name}_windows
@@ -90,6 +92,7 @@ jobs:
 
       - name: Update README.md with latest links
         run: |
+          source .venv/bin/activate || .\.venv\Scripts\activate
 
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             link_windows=".\releases\${sanitized_version}\${app_path_name}_windows.zip"            
@@ -103,6 +106,8 @@ jobs:
 
       - name: Commit and push all changes (zip files and README.md)
         run: |
+          source .venv/bin/activate || .\.venv\Scripts\activate
+
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add releases/${sanitized_version}/ README.md
