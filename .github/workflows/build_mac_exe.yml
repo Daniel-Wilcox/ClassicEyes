@@ -68,6 +68,7 @@ jobs:
           mv -f dist ${app_path_name}_macos
           zip -rq ${app_path_name}_macos.zip ${app_path_name}_macos
           mv -f ${app_path_name}_macos.zip releases/${sanitized_version}/
+          ls -al
 
       - name: Update README.md with latest links
         run: |
@@ -76,7 +77,8 @@ jobs:
 
       - name: Commit and push all changes (zip files and README.md)
         run: |
+          ls -al
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "Added zipped MacOs executable files and updated README.md for version ${version}."
+          git commit -m "Added zipped MacOs executable files and updated README.md for version ${version}."
           git push
