@@ -49,6 +49,7 @@ jobs:
       - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
         run: |
           source .venv/bin/activate
+          echo ${pyinstaller_app_name}
           pyinstaller app.py --name "${pyinstaller_app_name}"  \
           --onedir --windowed --noconfirm --clean
 
