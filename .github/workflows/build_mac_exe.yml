@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: master
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -75,8 +77,6 @@ jobs:
       - name: Commit and push all changes (zip files and README.md)
         run: |
           source .venv/bin/activate
-          echo (ls)
-          echo (git status)
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
