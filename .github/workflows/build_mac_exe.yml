@@ -81,9 +81,8 @@ jobs:
 
       - name: Update README.md with latest links
         run: |
-          link_macos = "https://github.com/${{github.repository}}/raw/refs/heads/master/releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
+          link_macos = "https://github.com/${GITHUB_REPOSITORY}/raw/${GITHUB_REF}/releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
           echo "download link: ${link_macos}"
-          # link_macos="./releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" Readme.md
 
       - name: Commit and push all changes (zip files and README.md)
