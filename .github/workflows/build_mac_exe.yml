@@ -19,7 +19,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: master
-          # run: git checkout HEAD^
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -82,7 +81,9 @@ jobs:
 
       - name: Update README.md with latest links
         run: |
-          link_macos="./releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
+          link_macos = "https://github.com/${{github.repository}}/raw/refs/heads/master/releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
+          echo "download link: ${link_macos}"
+          # link_macos="./releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" Readme.md
 
       - name: Commit and push all changes (zip files and README.md)
