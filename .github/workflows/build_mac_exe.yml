@@ -32,7 +32,7 @@ jobs:
       - name: Install UPX
         run: |
           brew install upx
-          UPX_DIR="$(brew --prefix upx)"
+          UPX_DIR="$(brew --prefix upx)/bin"
           echo "UPX Path: ${UPX_DIR}" 
           echo "UPX_DIR=${UPX_DIR}" >> $GITHUB_ENV
 
