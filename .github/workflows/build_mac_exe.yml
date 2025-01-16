@@ -77,12 +77,12 @@ jobs:
         run: |
           mkdir -p releases/${sanitized_version}
           mv -f dist ${app_path_name}_macos
-          zip -rq ${app_path_name}_macos.zip ${app_path_name}_macos
-          mv -f ${app_path_name}_macos.zip releases/${sanitized_version}/
+          tar -zcf ${app_path_name}_macos.tar.gz ${app_path_name}_macos
+          mv -f ${app_path_name}_macos.tar.gz releases/${sanitized_version}/
 
       - name: Update README.md with latest links
         run: |
-          link_macos="./releases/${sanitized_version}/${app_path_name}_macos.zip"
+          link_macos="./releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
           sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" Readme.md
 
       - name: Commit and push all changes (zip files and README.md)
