@@ -32,8 +32,9 @@ jobs:
       - name: Install UPX
         run: |
           brew install upx
-          echo "UPX Path: ${brew --prefix upx}" 
-          echo "UPX_DIR=${brew --prefix upx }" >> $GITHUB_ENV
+          UPX_DIR="$(brew --prefix upx)"
+          echo "UPX Path: ${UPX_DIR}" 
+          echo "UPX_DIR=${UPX_DIR}" >> $GITHUB_ENV
 
       - name: Set version and app name
         run: |
