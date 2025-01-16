@@ -26,6 +26,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Install UPX
+        run: |
+          brew install upx
+          echo "UPX Path: ${brew --prefix upx}" 
+          echo "UPX_DIR=${brew --prefix upx }" >> $GITHUB_ENV
+
       - name: Set version and app name
         run: |
           version=$(git describe --tags)
@@ -60,6 +69,7 @@ jobs:
           source .venv/bin/activate
           echo "Pyinstaller app name: ${pyinstaller_app_name}"
           pyinstaller app.py --name "${pyinstaller_app_name}"  \
+          --upx-dir $UPX_DIR \
           --onedir --windowed --noconfirm --clean
 
       - name: Rename and Zip build distribution folder
@@ -68,7 +78,6 @@ jobs:
           mv -f dist ${app_path_name}_macos
           zip -rq ${app_path_name}_macos.zip ${app_path_name}_macos
           mv -f ${app_path_name}_macos.zip releases/${sanitized_version}/
-          ls -la releases/${sanitized_version}/
 
       - name: Update README.md with latest links
         run: |
@@ -77,7 +86,7 @@ jobs:
 
       - name: Commit and push all changes (zip files and README.md)
         run: |
-          ls -la releases/${sanitized_version}/
+          ls -lah releases/${sanitized_version}/
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
