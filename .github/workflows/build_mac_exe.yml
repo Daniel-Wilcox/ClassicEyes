@@ -1,0 +1,97 @@
+name: Build MacOs Executable
+run-name: ${{ github.actor }} is building application MacOs executables with GitHub Actions 🛠️
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    env:
+      APP_NAME: "DAVES Wati Extractor"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Install UPX
+        run: |
+          brew install upx
+          UPX_DIR="$(brew --prefix upx)/bin"
+          echo "UPX Path: ${UPX_DIR}" 
+          echo "UPX_DIR=${UPX_DIR}" >> $GITHUB_ENV
+
+      - name: Set version and app name
+        run: |
+          version=$(git describe --tags)
+          echo "App version: ${version}"
+          echo "version=${version}" >> $GITHUB_ENV
+
+          sanitized_version=$(echo "$version" | sed 's/\./-/g')
+          echo "Sanitized app version: ${sanitized_version}"
+          echo "sanitized_version=${sanitized_version}" >> $GITHUB_ENV
+
+          sanitized_app_name=$(echo "$APP_NAME" | sed 's/ /-/g' | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Sanitized app name: ${sanitized_app_name}" 
+          echo "sanitized_app_name=${sanitized_app_name}" >> $GITHUB_ENV
+
+          pyinstaller_app_name=$(echo "$APP_NAME $version" | sed 's/\$/\\$/g')  # Replace spaces with underscores and escape $
+          echo "Pyinstaller app name: ${pyinstaller_app_name}"
+          echo "pyinstaller_app_name=${pyinstaller_app_name}" >> $GITHUB_ENV
+
+          app_path_name=$(echo "${sanitized_app_name}_${sanitized_version}" ) 
+          echo "Application path name: ${app_path_name}"
+          echo "app_path_name=${app_path_name}" >> $GITHUB_ENV
+
+      - name: Set up platform-specific Python environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build executable #add icons later: --icon=myicon.icns | --icon=myicon.ico
+        run: |
+          source .venv/bin/activate
+          echo "Pyinstaller app name: ${pyinstaller_app_name}"
+          pyinstaller app.py --name "${pyinstaller_app_name}"  \
+          --upx-dir $UPX_DIR \
+          --onedir --windowed --noconfirm --clean
+
+      - name: Rename and Zip build distribution folder
+        run: |
+          mkdir -p releases/${sanitized_version}
+          mv -f dist ${app_path_name}_macos
+          tar -zcf ${app_path_name}_macos.tar.gz ${app_path_name}_macos
+          mv -f ${app_path_name}_macos.tar.gz releases/${sanitized_version}/
+
+      - name: Update README.md with latest links
+        run: |
+          link_macos="https://github.com/${GITHUB_REPOSITORY}/raw/refs/heads/master/releases/${sanitized_version}/${app_path_name}_macos.tar.gz"
+          echo "download link: ${link_macos}"
+          sed -i '' "s|MacOs: .*|MacOs: [Download ${version}](${link_macos})|g" Readme.md
+
+      - name: Commit and push all changes (zip files and README.md)
+        run: |
+          ls -lah releases/${sanitized_version}/
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add Readme.md releases/*
+          git status
+          git commit -m "Added zipped MacOs executable files and updated Readme.md for version ${version}."
+          git push
