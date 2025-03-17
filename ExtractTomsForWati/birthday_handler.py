@@ -153,7 +153,7 @@ class BirthdayHandler(AbstractHandler):
 
         # Find users titled names in 'Name' column (prev. 'Birthday' column) #! Possibly move to feature creation
         all_string_rows = data_rows_clean.loc[:, "Name"].apply(
-            lambda x: isinstance(x, str) and x.replace(" ", "").isalpha()
+            lambda x: isinstance(x, str) and not x.replace(" ", "").isnumeric()
         )
         data_rows_clean.loc[~all_string_rows, "Name"] = float("nan")
         data_rows_clean["Name"] = data_rows_clean.loc[:, "Name"].str.title()
