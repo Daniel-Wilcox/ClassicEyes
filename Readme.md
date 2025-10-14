@@ -38,6 +38,20 @@ py -m venv .venv
 py -m pip install -r requirements.txt
 
 pyinstaller app.py --onedir --windowed --icon=myicon.ico  # Windows
+python -m PyInstaller app.py --onedir --windowed --collect-all python -y#this works 14-10-25
 ```
+
+I had to 
+1. move the project folder to Desktop
+2. deleted the 'dist' folder
+3. ran the above cmd
+
+
+# To distibute (simple)
+
+1. Copy the 'app' folder within the 'dist' folder
+2. Paste the 'app' folder to computer (preferably not the Desktop)
+3. within the app folder, create a shortcut for the app.exe file
+
 
 
