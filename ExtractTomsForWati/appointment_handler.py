@@ -20,7 +20,7 @@ VALID_OPTOMETRIST_LIST = [
     "Nicci Wilcox",
     "Amisha Soodyall",
     "Sandesh Srikissoon",
-    "Stefan van der Westhuizen",
+    "Catherine Lafitte",
     "Rubina Evans",
     "Yasmin Vawda",
 ]
