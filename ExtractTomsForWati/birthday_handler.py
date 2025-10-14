@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-import pandas as pd
-from ._abstract_handler import AbstractHandler
 
+import pandas as pd
+
+from ._abstract_handler import AbstractHandler
 
 ### Constants and Defaults ###
 #! TODO: ensure all known junk words are provided
@@ -18,7 +19,6 @@ DEFAULT_VALID_FILE_TYPES = [".xls", ".xlsx"]
 
 @dataclass
 class BirthdayHandler(AbstractHandler):
-
     # Initialize file attributes
     #! Overwrite expected attributes to be defined within child class
     valid_file_types: list[str] = field(
@@ -41,7 +41,6 @@ class BirthdayHandler(AbstractHandler):
         contact_type: str = "Cell",
         expected_contact_types: list | None = None,
     ):
-
         if expected_contact_types and (contact_type not in expected_contact_types):
             raise ValueError(
                 f"{contact_type = } is not found in expected contact types list: {expected_contact_types}"
@@ -50,7 +49,9 @@ class BirthdayHandler(AbstractHandler):
         category_mask = df["Contact_Type"] == contact_type
         has_content_mask = df["Contact"].notna() & (df["Contact"] != "")
         valid_len_mask = df["Contact"].apply(lambda x: len(str(x)) >= 10)
-        valid_start_mask = df["Contact"].apply(
+        valid_start_mask = df[
+            "Contact"
+        ].apply(
             lambda x: str(x).startswith("0")
         )  # ("082", "083", "084", "079", "076", "072", "071", "078", "060", "011", "021")
         not_zeros_mask = df["Contact"] != "0000000000"
@@ -68,7 +69,6 @@ class BirthdayHandler(AbstractHandler):
 
     # @abstractmethod
     def _clean_data(self, df: pd.DataFrame | None = None):
-
         # Retrieve relevant dataframe and validate
         self.df_raw = self._validate_dataframe("df_raw", df)
         df_raw = self.df_raw.copy()
@@ -109,7 +109,7 @@ class BirthdayHandler(AbstractHandler):
             raise ValueError(f"Unexpected column names: {', '.join(faulty_columns)}.")
 
         # Replace empty columns with new unique names and assign to dataframe.columns
-        default_column_list = [f"col_{i+1}" for i in range(new_col_list.count(""))]
+        default_column_list = [f"col_{i + 1}" for i in range(new_col_list.count(""))]
         filler_iter = iter(default_column_list)
         data_rows_clean.columns = [
             item if item != "" else next(filler_iter) for item in new_col_list
@@ -183,7 +183,6 @@ class BirthdayHandler(AbstractHandler):
 
     # @abstractmethod
     def _add_features(self, df: pd.DataFrame | None = None):
-
         # Retrieve relevant dataframe and validate
         self.df_clean = self._validate_dataframe("df_clean", df)
         df = self.df_clean.copy()
@@ -244,5 +243,4 @@ class BirthdayHandler(AbstractHandler):
 
 
 if __name__ == "__main__":
-
     birthday_handler = BirthdayHandler()

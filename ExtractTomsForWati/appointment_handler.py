@@ -1,18 +1,18 @@
 from dataclasses import dataclass, field
+
 import pandas as pd
 
 from ._abstract_handler import AbstractHandler
-
 
 ### Constants and Defaults ###
 #! TODO: ensure all known junk words are provided
 REMOVE_ROWS_WITH_KEYWORDS = [
     "C/Lens Check",
+    "C/Lens Purchases",
+    "Spec Exam",
+    "Follow up Exam",
     "Funded Accounts",
     "Private Accounts",
-    "C/Lens Purchases",
-    "Follow up Exam",
-    "Spec Exam",
 ]
 
 #! TODO: Add in the full list of Optometrists
@@ -43,7 +43,6 @@ DEFAULT_VALID_FILE_TYPES = [".xls", ".xlsx"]
 
 @dataclass
 class AppointmentHandler(AbstractHandler):
-
     # Initialize file attributes
     #! Overwrite expected attributes to be defined within child class
     valid_file_types: list[str] = field(
@@ -73,7 +72,6 @@ class AppointmentHandler(AbstractHandler):
 
     # @abstractmethod
     def _clean_data(self, df: pd.DataFrame | None = None):
-
         # Retrieve relevant dataframe and validate
         self.df_raw = self._validate_dataframe("df_raw", df)
         df_raw = self.df_raw.copy()
@@ -123,7 +121,6 @@ class AppointmentHandler(AbstractHandler):
 
     # @abstractmethod
     def _add_features(self, df: pd.DataFrame | None = None):
-
         # Retrieve relevant dataframe and validate
         self.df_clean = self._validate_dataframe("df_clean", df)
         df = self.df_clean.copy()
